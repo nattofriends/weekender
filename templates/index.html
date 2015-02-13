@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pickadate.js/3.5.3/compressed/themes/classic.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pickadate.js/3.5.3/compressed/themes/classic.date.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pickadate.js/3.5.3/compressed/themes/classic.time.css">
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pickadate.js/3.5.3/compressed/picker.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pickadate.js/3.5.3/compressed/picker.date.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pickadate.js/3.5.3/compressed/picker.time.js"></script>
+        <script src="https:////cdnjs.cloudflare.com/ajax/libs/sprintf/1.0.1/sprintf.min.js"></script>
+
+        <script src="{{ url_for('static', filename='app.js') }}"></script>
+
+        <script type="text/javascript">
+            $(function() {
+                new Weekender();
+            });
+        </script>
+
+        <title>Weekender</title>
+
+        <!-- We're not actually mobile compatible yet... ->
+        <!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"> -->
+    </head>
+
+    <body id="top">
+        <div class="container">
+
+            <div class="jumbotron">
+                <h2>Weekender <small>When will you visit imouto?</small></h2>
+
+                <div class="message-area">
+                    <div class="alert alert-info hidden js-info" role="alert">Loading...</div>
+                    <div class="alert alert-danger hidden js-error" role="alert">There was an error while loading data.</div>
+
+                    <div class="hidden js-result">
+                        <h4 class="title js-title"></h4>
+
+                        <table class="table table-hover js-table">
+                            <thead>
+                                <tr>
+                                    <td>Time</td>
+                                    <td>From</td>
+                                    <td>To</td>
+                                    <td> Flight No.</td>
+                                    <td>Fare</td>
+                                </tr>
+                            </thead>
+                            <tr class="js-row hidden">
+                                <td class="js-date-time"></td>
+                                <td class="js-origin"></td>
+                                <td class="js-destination"></td>
+                                <td class="js-flight"></td>
+                                <td class="js-fare"></td>
+                            </tr>
+                        </table>
+
+                        <input type="checkbox" id="filter-early" class="js-filter-early">
+                            <label for="filter-early">No early flights</label>
+                        </input>
+                    </div>
+                 </div>
+
+                <input type="text" id="date" />
+                <div class="picker-holder clearfix"></div>
+
+                <button class="btn btn-default btn-lg search js-search">Inquire</button>
+            </div>
+        </div>
+    </body>
+</html>

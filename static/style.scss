@@ -1,0 +1,58 @@
+@import 'static/vendor/bootstrap-sass-official/assets/stylesheets/bootstrap';
+
+.jumbotron {
+    margin-top: 50px;
+    padding-top: 24px;
+
+    .alert {
+        display: inline-block;
+    }
+}
+
+#date {
+    display: none;
+}
+
+.picker-holder, .table, .search {
+    width: 500px;
+}
+
+.search {
+    margin-top: 10px;
+}
+
+.message-area {
+    min-height: 80px;
+    margin-bottom: 5px;
+}
+
+.hidden {
+    display: none;
+}
+
+.strong {
+    font-weight: bold;
+}
+
+.strikethrough {
+    color: gray;
+    text-decoration: line-through;
+}
+
+/* Hax to jam the picker inside out visible box */
+/* Their documentation says not to do this, but #yolo */
+.picker-holder .picker {
+    width: inherit;
+    position: inherit;
+    z-index: inherit;
+
+    .picker__holder {
+        position: inherit;
+        min-width: inherit;
+        max-width: inherit;
+        
+        transition: inherit;
+        -webkit-transform: inherit;
+        -moz-transform: inherit;
+    }
+}

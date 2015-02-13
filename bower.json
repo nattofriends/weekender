@@ -1,0 +1,19 @@
+{
+  "name": "weekender",
+  "version": "0.0.1",
+  "description": "Weekender Natto",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap-sass-official": "~3",
+    "jquery": "~2",
+    "pickadate": "~3",
+    "sprintf": "~1.0.2"
+  }
+}

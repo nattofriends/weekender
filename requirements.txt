@@ -1,0 +1,8 @@
+cachetools
+cssselect
+Flask
+lxml
+pyScss
+pytest
+requests
+uWSGI
