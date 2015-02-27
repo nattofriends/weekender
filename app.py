@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from configparser import ConfigParser
+from operator import attrgetter
 import json
 
 from flask import Flask
@@ -35,14 +36,20 @@ def flights():
             'error': 'Invalid date',
         })
 
-    begin_results = flatten([
-        weekender.request_with_next(origin_day)
-        for origin_day in origin_days
-    ])
-    end_results = flatten([
-        weekender.request_with_next(return_day, reverse=True)
-        for return_day in return_days
-    ])
+    begin_results = sorted(
+        flatten([
+            weekender.request_with_next(origin_day)
+            for origin_day in origin_days
+        ]),
+        key=attrgetter('fare'),
+    )
+    end_results = sorted(
+        flatten([
+            weekender.request_with_next(return_day, reverse=True)
+            for return_day in return_days
+        ]),
+        key=attrgetter('fare'),
+    )
 
     data = {
         'begin': begin_results,

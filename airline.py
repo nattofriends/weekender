@@ -4,7 +4,6 @@ from collections import namedtuple
 from configparser import ConfigParser
 from datetime import timedelta
 from datetime import date, time
-from operator import attrgetter
 from urllib import parse
 import itertools
 import operator
@@ -39,15 +38,11 @@ class Weekender:
         return time(hour=int(hour), minute=int(minute))
 
     @cachetools.ttl_cache()
-    def request_with_next(self, date, reverse=False, sort_key='fare'):
+    def request_with_next(self, date, reverse=False):
         day = self.request(date, operator.gt, self.leave_after, reverse=reverse, early=False)
         day_after = self.request(date + timedelta(days=1), operator.lt, self.leave_before, reverse=reverse, early=True)
 
-        # Oops, have to sort
-        result = flatten([day, day_after])
-        result.sort(key=attrgetter(sort_key))
-
-        return result
+        return flatten([day, day_after])
 
     def request(self, date, cmp, filter_bound, reverse=False, early=False):
         result = self.ar.request_all(date, reverse=reverse, early=early)
