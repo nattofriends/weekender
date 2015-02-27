@@ -9,6 +9,7 @@ from flask import request
 
 from util import WeekenderEncoder
 from util import bound_weekend
+from util import flatten
 from util import parse_date
 import airline
 
@@ -27,15 +28,21 @@ def flights():
     selected = request.args.get('selected', None)
     selected = parse_date(selected)
 
-    begin, end = bound_weekend(selected)
+    origin_days, return_days = bound_weekend(selected, weekender.config)
 
-    if not selected or not begin:
+    if not selected or not origin_days:
         return json.dumps({
             'error': 'Invalid date',
         })
 
-    begin_results = weekender.request_with_next(begin)
-    end_results = weekender.request_with_next(end, reverse=True)
+    begin_results = flatten([
+        weekender.request_with_next(origin_day)
+        for origin_day in origin_days
+    ])
+    end_results = flatten([
+        weekender.request_with_next(return_day, reverse=True)
+        for return_day in return_days
+    ])
 
     data = {
         'begin': begin_results,

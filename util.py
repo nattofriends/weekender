@@ -5,8 +5,6 @@ from datetime import timedelta
 from json import JSONEncoder
 import re
 
-ONE = timedelta(days=1)
-TWO = timedelta(days=2)
 
 def flatten(lol):
     return [item for lst in lol for item in lst]
@@ -27,29 +25,62 @@ def parse_date(date_string):
         return None
 
 
-def bound_weekend(weekend_date):
-    """Return the bounding days of a weekend (Friday and Sunday)."""
+DAY_STRINGS = [
+    'mon',
+    'tue',
+    'wed',
+    'thu',
+    'fri',
+    'sat',
+    'sun',
+]
+
+def days_string_to_dow(days_string):
+    return [
+        DAY_STRINGS.index(
+            day.strip().lower()
+        ) for day in
+        days_string.strip().split(',')
+    ]
+
+
+def bound_weekend(weekend_date, config):
+    """Return the bounding days of a weekend, subject to configuration,
+    in the format ((origin_day_1, origin_day_2), (return_day_1, return_day_2))
+    """
+    sat_dow = DAY_STRINGS.index('sat')
+    # Offset days from Saturday
+    origin_days = [
+        timedelta(days=(dow - sat_dow)) for dow in
+        days_string_to_dow(
+            config['general']['origin_days'],
+        )
+    ]
+
+    return_days = [
+        timedelta(days=(dow + (7 - sat_dow)) % 7) for dow in
+        days_string_to_dow(
+            config['general']['return_days'],
+        )
+    ]
 
     if not weekend_date:
         return (None, None)
-
 
     # The datepicker is set up to allow picking Saturday and Sunday
     dow = weekend_date.weekday()
     if dow not in (5, 6):
         return (None, None)
-    elif dow == 5:
-        begin = weekend_date - ONE
-        end = weekend_date + ONE
     elif dow == 6:
-        begin = weekend_date - TWO
-        end = weekend_date
+        weekend_date -= timedelta(days=1)
 
-    return (begin, end)
-
+    return (
+        [weekend_date + day for day in origin_days],
+        [weekend_date + day for day in return_days],
+    )
 
 def tomorrow(date_obj):
-    return date_obj + ONE
+    return date_obj + timedelta(days=1)
 
 
 def meridian(hour, indicator):
@@ -66,7 +97,7 @@ class WeekenderEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, date):
             # Yes, this is not the representation that comes in.
-            return obj.strftime('%Y/%m/%d')
+            return obj.strftime('%a %Y/%m/%d')
         if isinstance(obj, time):
             return obj.strftime('%I:%M %p')
         # Let the base class default method raise the TypeError
