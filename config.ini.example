@@ -2,6 +2,11 @@
 leave_after = 18:00
 leave_before = 9:00
 
+# each day and the following morning are checked
+# acceptable: sun, mon, tue, wed, thu, fri, sat
+origin_days = thu,fri
+return_days = sun
+
 [Southwest]
 origins = SFO,OAK
 destinations = SNA,ONT
