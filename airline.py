@@ -148,11 +148,11 @@ class AirlineBase(metaclass=AirlineRegistry):
         return flightinfos
 
     def _request_single(self, origin, destination, date, early):
-        """Each subclass shoudl implement this."""
+        """Each subclass should implement this."""
         raise NotImplementedError
 
-    def _hipmunk_link(self, origin, destination, date, carrier, flight_no):
-        return 'https://www.hipmunk.com/flights#f={origin}::+{carrier}{flight_no};t={destination};d={date}'.format(
+    def _google_flights_link(self, origin, destination, date, carrier, flight_no):
+        return 'https://www.google.com/flights/#search;f={origin};t={destination};d={date};tt=o;sel={origin}{destination}0{carrier}{flight_no}'.format(
             origin=origin,
             carrier=carrier,
             flight_no=flight_no,
@@ -324,7 +324,7 @@ class JetBlue(AirlineBase):
             destination,
             date,
             self.carrier,
-            self._hipmunk_link(
+            self._google_flights_link(
                 origin, destination, date, self.carrier, flight_number,
             ),
             is_early,
@@ -391,7 +391,7 @@ class United(AirlineBase):
             destination,
             date,
             self.carrier,
-            self._hipmunk_link(
+            self._google_flights_link(
                 origin, destination, date, self.carrier, flight_number,
             ),
             is_early,
