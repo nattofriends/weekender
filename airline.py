@@ -21,7 +21,18 @@ from util import tomorrow
 config_file = "config.ini"
 
 
-class FlightInfo(namedtuple("FlightInfo", ["origin", "destination", "early", "depart_date", "depart_time", "arrive_time", "flight_no", "fare"])):
+class FlightInfo(namedtuple("FlightInfo", [
+    "origin",
+    "destination",
+    "depart_date",
+    "carrier",
+    "booking_link",
+    "is_early",
+    "depart_time",
+    "arrive_time",
+    "flight_no",
+    "fare"
+])):
     pass
 
 class Weekender:
@@ -140,6 +151,15 @@ class AirlineBase(metaclass=AirlineRegistry):
         """Each subclass shoudl implement this."""
         raise NotImplementedError
 
+    def _hipmunk_link(self, origin, destination, date, carrier, flight_no):
+        return 'https://www.hipmunk.com/flights#f={origin}::+{carrier}{flight_no};t={destination};d={date}'.format(
+            origin=origin,
+            carrier=carrier,
+            flight_no=flight_no,
+            destination=destination,
+            date=date.strftime('%Y-%m-%d'),
+        )
+
     def _parse_time_string(self, time_string):
         numbers, indicator = time_string.split(" ")
         hour, minute = numbers.split(":")
@@ -151,7 +171,7 @@ class AirlineBase(metaclass=AirlineRegistry):
         return time(hour=hour, minute=minute)
 
 class Southwest(AirlineBase):
-    prefix = "WN"
+    carrier = 'WN'
     endpoint = "https://www.southwest.com/flight/select-flight.html"
     date_format = '%m/%d/%y'
 
@@ -198,7 +218,7 @@ class Southwest(AirlineBase):
 
         return rows
 
-    def extract_row_to_flightinfo(self, row, origin, destination, date, early):
+    def extract_row_to_flightinfo(self, row, origin, destination, date, is_early):
         # Depart, arrive, flight number, Wanna Get Away fare
         to_extract = {
             0: self._col_time,
@@ -213,7 +233,11 @@ class Southwest(AirlineBase):
         if len(cols) < 8:  # Wanna Get Away <td> isn't there at all. All fares are sold out
             return None
 
-        interested_cols = [origin, destination, date, early] + [to_extract[i](col) for i, col in enumerate(cols) if i in to_extract.keys()]
+        row_extracted_data = [to_extract[i](col) for i, col in enumerate(cols) if i in to_extract.keys()]
+
+        interested_cols = \
+            [origin, destination, date, self.carrier, None, is_early] + \
+            row_extracted_data
 
         fi = FlightInfo(*interested_cols)
 
@@ -229,7 +253,7 @@ class Southwest(AirlineBase):
         return self._parse_time_string(time_string + ' ' + indicator)
 
     def _col_flight(self, col):
-        return self.prefix + ' ' + self.elem_sel_to_text(col, ".bugLinkText", sep='/')
+        return self.elem_sel_to_text(col, ".bugLinkText", sep='/')
 
     def _col_fare(self, col):
         fare = self.elem_sel_to_text(col, ".product_price").strip(' \n\t$')
@@ -240,7 +264,7 @@ class Southwest(AirlineBase):
         return int(fare)
 
 class JetBlue(AirlineBase):
-    prefix = "B6"
+    carrier = 'B6'
     endpoint = "https://book.jetblue.com/B6/webqtrip.html"
     date_format = '%Y-%m-%d'
 
@@ -281,7 +305,7 @@ class JetBlue(AirlineBase):
 
         return rows
 
-    def extract_row_to_flightinfo(self, row, origin, destination, date, early):
+    def extract_row_to_flightinfo(self, row, origin, destination, date, is_early):
         # JetBlue just adds multiple times instead of putting the combined time
         depart_time = row.cssselect(".from time")[0].text_content()
         depart_time = self._parse_time_string(depart_time)
@@ -291,17 +315,29 @@ class JetBlue(AirlineBase):
 
         flight_numbers = [elem.text_content().split(" ")[1] for elem in row.cssselect(".flight-number")]
         flight_number = '/'.join(flight_numbers)
-        flight_number = self.prefix + ' ' + flight_number
 
         fare = int(self.elem_sel_to_text(row, ".fare.non-refund .label").strip(' \r\n\t$'))
 
         # TODO: Need more checks here
-        fi = FlightInfo(origin, destination, date, early, depart_time, arrive_time, flight_number, fare)
+        fi = FlightInfo(
+            origin,
+            destination,
+            date,
+            self.carrier,
+            self._hipmunk_link(
+                origin, destination, date, self.carrier, flight_number,
+            ),
+            is_early,
+            depart_time,
+            arrive_time,
+            flight_number,
+            fare,
+        )
 
         return fi
 
 class United(AirlineBase):
-    prefix = "UA"
+    carrier = 'UA'
     endpoint = "https://mobile.united.com/Booking/OneWaySearch"
     date_format = "%a., %b. %d, %Y"
 
@@ -339,9 +375,8 @@ class United(AirlineBase):
         time_string, _, _ = [text.strip() for text in info.strip('\t\r\n').split('\r\n')]
         return self._parse_time_string(time_string)
 
-    def extract_row_to_flightinfo(self, row, origin, destination, date, early):
+    def extract_row_to_flightinfo(self, row, origin, destination, date, is_early):
         _, flight_number = row.xpath(".//img[@alt='carrier logo']/..")[0].text_content().strip().split(' ')
-        flight_number = self.prefix + ' ' + flight_number
 
         depart_time = self._extract_time_for_label(row, 'DepartureAirportName')
         arrive_time = self._extract_time_for_label(row, 'ArrivalAirportName')
@@ -351,7 +386,20 @@ class United(AirlineBase):
         fare = int(m.group(1))
 
         # TODO: What is error checking? Hello? Bueller?
-        fi = FlightInfo(origin, destination, date, early, depart_time, arrive_time, flight_number, fare)
+        fi = FlightInfo(
+            origin,
+            destination,
+            date,
+            self.carrier,
+            self._hipmunk_link(
+                origin, destination, date, self.carrier, flight_number,
+            ),
+            is_early,
+            depart_time,
+            arrive_time,
+            flight_number,
+            fare,
+        )
 
         return fi
 

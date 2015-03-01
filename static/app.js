@@ -94,7 +94,7 @@ Weekender.prototype.hideInfo_ = function () {
 
 
 function Fare(fare) {
-    fields = ['origin', 'destination', 'departDate', 'isEarly', 'departTime', 'arriveTime', 'flightNo', 'fare'];
+    fields = ['origin', 'destination', 'departDate', 'carrier', 'bookingLink', 'isEarly', 'departTime', 'arriveTime', 'flightNo', 'fare'];
 
     $.each(fields, $.proxy(function (idx, val) {
         this[fields[idx]] = fare[idx];
@@ -111,12 +111,17 @@ Fare.prototype.render = function (container) {
     var destination = container.find('.js-destination')
     var flight = container.find('.js-flight');
     var fare = container.find('.js-fare');
+    var bookingLink = container.find('.js-booking-link');
 
     datetime.html(sprintf("%s %s - %s", this.departDate, this.departTime, this.arriveTime));
     origin.html(this.origin);
     destination.html(this.destination);
-    flight.html(this.flightNo);
+    flight.html(sprintf("%s %s", this.carrier, this.flightNo));
     fare.html(sprintf("$%s", this.fare));
+
+    if (this.bookingLink !== null) {
+        bookingLink.html($(sprintf("<a href='%s' target='_blank'>Book</a>", this.bookingLink)));
+    }
 
     return this;
 };  
