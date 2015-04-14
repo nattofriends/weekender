@@ -110,11 +110,15 @@ class AirlineBase(metaclass=AirlineRegistry):
 
     @property
     def origins(self):
-        return self.config[self.__class__.__name__]['origins'].split(',')
+        return (self.config[self.__class__.__name__]['origins'].split(',')
+                if self.__class__.__name__ in self.config
+                else [])
 
     @property
     def destinations(self):
-        return self.config[self.__class__.__name__]['destinations'].split(',')
+        return (self.config[self.__class__.__name__]['destinations'].split(',')
+                if self.__class__.__name__ in self.config
+                else [])
 
     def request_all(self, date, reverse=False, early=False):
         if reverse:

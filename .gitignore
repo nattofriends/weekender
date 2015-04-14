@@ -1,0 +1,14 @@
+bower_components/
+static/vendor
+static/style.css
+runtime/
+
+*.pyc
+*.swp
+*.swo
+
+config.ini
+Makefile.appconfig
+
+app.pid
+uwsgi.log
