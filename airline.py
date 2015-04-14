@@ -176,6 +176,7 @@ class AirlineBase(metaclass=AirlineRegistry):
         return time(hour=hour, minute=minute)
 
     def _parse_iso_datetime_string(self, datetime_string):
+        """Parse ISO8601 with strptime because lol."""
         return datetime.strptime(re.sub(r'(\d{2}):(\d{2})$', r'\1\2', datetime_string), '%Y-%m-%dT%H:%M:%S%z')
 
 class Southwest(AirlineBase):
@@ -411,7 +412,6 @@ class United(AirlineBase):
 
         return fi
 
-
 class VirginAmerica(AirlineBase):
     carrier = 'VX'
     endpoint = "https://www.virginamerica.com/api/v0/booking/search"
@@ -462,6 +462,7 @@ class VirginAmerica(AirlineBase):
             seg['flightNum'],
             fare,
         )
+
 
 if __name__ == '__main__':
     config = ConfigParser()
