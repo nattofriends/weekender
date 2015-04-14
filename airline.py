@@ -3,7 +3,8 @@
 from collections import namedtuple
 from configparser import ConfigParser
 from datetime import timedelta
-from datetime import date, time
+from datetime import date, time, datetime
+from json import dumps, loads
 from urllib import parse
 import itertools
 import operator
@@ -173,6 +174,9 @@ class AirlineBase(metaclass=AirlineRegistry):
         hour = meridian(hour, indicator)
 
         return time(hour=hour, minute=minute)
+
+    def _parse_iso_datetime_string(self, datetime_string):
+        return datetime.strptime(re.sub(r'(\d{2}):(\d{2})$', r'\1\2', datetime_string), '%Y-%m-%dT%H:%M:%S%z')
 
 class Southwest(AirlineBase):
     carrier = 'WN'
@@ -408,12 +412,63 @@ class United(AirlineBase):
         return fi
 
 
+class VirginAmerica(AirlineBase):
+    carrier = 'VX'
+    endpoint = "https://www.virginamerica.com/api/v0/booking/search"
+    date_format = '%Y-%m-%d'
+
+    fixed_data = {
+        "numOfAdults": 1,
+        "bookingType": "DOLLAR"
+    }
+
+    dynamic_fields = {
+        'origin': 'origin',
+        'destination': 'dest',
+        'formatted_date': 'departureDate',
+    }
+
+    def _request_single(self, origin, destination, date, early, data):
+        data['returningDate'] = data['departureDate']
+        r = self.s.post(self.endpoint, json={'roundTrip': data})
+        d = r.json()
+        if d['status']['status'] != 'SUCCESS':
+            return None
+
+        return d['response']['departingFlightsInfo']['flightList']['NON_STOP']
+
+    def extract_row_to_flightinfo(self, row, origin, destination, date, is_early):
+        # Virgin breaks down all the fare types so let's use the cheapest here.
+        fare = round(min([x['dollarFare']['totalFare']
+                          for x in row['fareList'].values()
+                          if 'dollarFare' in x]))
+
+        seg = row['flightSegment']
+
+        depart_time = self._parse_iso_datetime_string(seg['departureDateTime']).time()
+        arrive_time = self._parse_iso_datetime_string(seg['arrivalDateTime']).time()
+
+        return FlightInfo(
+            origin,
+            destination,
+            date,
+            self.carrier,
+            self._google_flights_link(
+                origin, destination, date, self.carrier, seg['flightNum'],
+            ),
+            is_early,
+            depart_time,
+            arrive_time,
+            seg['flightNum'],
+            fare,
+        )
+
 if __name__ == '__main__':
     config = ConfigParser()
     config.read(config_file)
 
     from datetime import date
-    u = United(config)
-    print(u.request_single('SFO', 'ONT', date(2015,2,20), early=False))
+    vx = VirginAmerica(config)
+    print(vx.request_single('LAX', 'SFO', date(2015,5,20), early=False))
     #w = Weekender(config)
     #print(w.request(date(2015, 2, 20)))
