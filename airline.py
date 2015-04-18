@@ -236,7 +236,7 @@ class Southwest(AirlineBase):
         row_extracted_data = [to_extract[i](col) for i, col in enumerate(cols) if i in to_extract.keys()]
 
         interested_cols = \
-            [origin, destination, date, self.carrier, None, is_early] + \
+            [origin, destination, date, self.carrier, self._google_flights_link(origin, destination, date, self.carrier, row_extracted_data[2]), is_early] + \
             row_extracted_data
 
         fi = FlightInfo(*interested_cols)
