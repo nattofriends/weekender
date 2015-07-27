@@ -433,7 +433,9 @@ class VirginAmerica(AirlineBase):
         r = self.s.post(self.endpoint, json={'roundTrip': data})
         d = r.json()
         if d['status']['status'] != 'SUCCESS':
-            return None
+            return []
+        if not d['response']['departingFlightsInfo']['flightList']:
+            return []
 
         return d['response']['departingFlightsInfo']['flightList']['NON_STOP']
 
