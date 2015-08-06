@@ -262,7 +262,7 @@ class Southwest(AirlineBase):
         return self._parse_time_string(time_string + ' ' + indicator)
 
     def _col_flight(self, col):
-        return self.elem_sel_to_text(col, ".bugLinkText", sep='/')
+        return self.elem_sel_to_text(col, ".bugLinkText", sep='/').replace(' (opens popup)', '')
 
     def _col_fare(self, col):
         fare = self.elem_sel_to_text(col, ".product_price").strip(' \n\t$')
