@@ -275,6 +275,8 @@ class Southwest(AirlineBase):
 class JetBlue(AirlineBase):
     carrier = 'B6'
     endpoint = "https://book.jetblue.com/B6/webqtrip.html"
+    ajax_endpoint = "https://book.jetblue.com/B6/AirLowFareSearchExt.do"
+    second_endpoint = "https://book.jetblue.com/B6/AirFareFamiliesFlexibleForward.do"
     date_format = '%Y-%m-%d'
 
     fixed_data = {
@@ -301,31 +303,44 @@ class JetBlue(AirlineBase):
 
     def _request_single(self, origin, destination, date, early, data):
         r = self.s.post(self.endpoint, data=data)
-        pr = parse.urlparse(r.url)
-        params = parse.parse_qs(pr.query)
+        r = self.s.post(self.ajax_endpoint, data={'ajaxAction': 'true'})
+        r = self.s.get(self.second_endpoint)
 
-        r = self.s.get(self.endpoint, params={
-            "_eventId": "getAsyncSearchResult",
-            "_flowExecutionKey": params['_flowExecutionKey'],
-        })
+        # Thanks for nothing, JetBlue.
+        m = re.search(
+            r'tdGroupData\[0\] =(.*?});',
+            r.text.replace('\n', ''),
+        )
 
-        doc = self.resp_to_html(r)
-        rows = doc.cssselect(".flight-row")[1:]
+        # ``Escaping'', they said!
+        json_text = m.group(1).replace("\\'", "'")
 
-        return rows
+        fares = [
+            html.fromstring(fare_html)
+            for fare_html
+            in list(loads(json_text).values())
+        ]
+
+        return fares
 
     def extract_row_to_flightinfo(self, row, origin, destination, date, is_early):
-        # JetBlue just adds multiple times instead of putting the combined time
-        depart_time = row.cssselect(".from time")[0].text_content()
-        depart_time = self._parse_time_string(depart_time)
+        # Ignore non-nonstop?
+        if len(row.getchildren()) != 1:
+            return
 
-        arrive_time = row.cssselect(".to time")[-1].text_content()
-        arrive_time = self._parse_time_string(arrive_time)
+        depart_time = self._parse_time_string(
+            self.elem_sel_to_text(row, ".colDepart .time")
+        )
 
-        flight_numbers = [elem.text_content().split(" ")[1] for elem in row.cssselect(".flight-number")]
-        flight_number = '/'.join(flight_numbers)
+        arrive_time = self._parse_time_string(
+            self.elem_sel_to_text(row, ".colArrive .time")
+        )
 
-        fare = int(self.elem_sel_to_text(row, ".fare.non-refund .label").strip(' \r\n\t$'))
+        flight_number = self.elem_sel_to_text(row, '.flightCode')
+
+        fare = int(
+            row.cssselect(".colPrice")[0].text_content().strip(' \r\n\t$')
+        )
 
         # TODO: Need more checks here
         fi = FlightInfo(
@@ -471,7 +486,5 @@ if __name__ == '__main__':
     config.read(config_file)
 
     from datetime import date
-    vx = VirginAmerica(config)
-    print(vx.request_single('LAX', 'SFO', date(2015,5,20), early=False))
-    #w = Weekender(config)
-    #print(w.request(date(2015, 2, 20)))
+    b6 = JetBlue(config)
+    print(b6.request_single('SFO', 'LGB', date(2015, 10, 23), early=False))
