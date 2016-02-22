@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from configparser import ConfigParser
 from operator import attrgetter
 import json
 
@@ -13,6 +12,8 @@ from util import bound_weekend
 from util import flatten
 from util import parse_date
 import airline
+
+from config import config
 
 
 app = Flask(__name__)
@@ -61,12 +62,7 @@ def flights():
 def create():
     global weekender
 
-    config_file = 'config.ini'
-
-    config = ConfigParser()
-    config.read(config_file)
-
-    weekender = airline.Weekender(config)
+    weekender = airline.Weekender()
 
     return app
 

@@ -99,6 +99,6 @@ class WeekenderEncoder(JSONEncoder):
             # Yes, this is not the representation that comes in.
             return obj.strftime('%a %Y/%m/%d')
         if isinstance(obj, time):
-            return obj.strftime('%I:%M %p')
+            return obj.strftime('%-I:%M %p')
         # Let the base class default method raise the TypeError
         return super(WeekenderEncoder, self).default(obj)

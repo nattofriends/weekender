@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from collections import namedtuple
 from configparser import ConfigParser
 from datetime import timedelta
@@ -15,11 +14,10 @@ import cachetools
 import cssselect
 import requests
 
+from config import config
 from util import flatten
 from util import meridian
 from util import tomorrow
-
-config_file = "config.ini"
 
 
 class FlightInfo(namedtuple("FlightInfo", [
@@ -37,7 +35,7 @@ class FlightInfo(namedtuple("FlightInfo", [
     pass
 
 class Weekender:
-    def __init__(self, config):
+    def __init__(self):
         self.config = config
         self.ar = AirlineRegistry
         self.ar.instantiate(config)
@@ -482,9 +480,8 @@ class VirginAmerica(AirlineBase):
 
 
 if __name__ == '__main__':
-    config = ConfigParser()
-    config.read(config_file)
-
     from datetime import date
-    b6 = JetBlue(config)
-    print(b6.request_single('SFO', 'LGB', date(2015, 10, 23), early=False))
+    #  b6 = JetBlue(config)
+    #  print(b6.request_single('SFO', 'LGB', date(2015, 10, 23), early=False))
+    wn = Southwest(config)
+    print(wn.request_single('OAK', 'ONT', date(2015, 12, 19), early=False))
