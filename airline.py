@@ -334,7 +334,7 @@ class JetBlue(AirlineBase):
             self.elem_sel_to_text(row, ".colArrive .time")
         )
 
-        flight_number = self.elem_sel_to_text(row, '.flightCode')
+        flight_number = self.elem_sel_to_text(row, '.flightCode').replace('Flight number ', '')
 
         fare = int(
             row.cssselect(".colPrice")[0].text_content().strip(' \r\n\t$')
