@@ -2,6 +2,7 @@ bower_components/
 static/vendor
 static/style.css
 runtime/
+weekender.db
 
 *.pyc
 *.swp

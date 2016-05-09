@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import namedtuple
-from configparser import ConfigParser
 from datetime import timedelta
 from datetime import date, time, datetime
-from json import dumps, loads
-from urllib import parse
+from json import loads
 import itertools
 import operator
 import re
