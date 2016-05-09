@@ -389,6 +389,15 @@ class United(AirlineBase):
         doc = self.resp_to_html(r)
         rows = doc.cssselect("ul[data-role='listview']")[:-1]
 
+        # More pages?
+        next_page = doc.cssselect("a[href*='DisplayNextFlights']")
+        while next_page:
+            next_page, = next_page
+            r = self.s.get('https://mobile.united.com' + next_page.attrib['href'])
+            doc = self.resp_to_html(r)
+            rows +=  doc.cssselect("ul[data-role='listview']")[:-1]
+            next_page = doc.cssselect("a[href*='/Booking/DisplayNextFlights']")
+
         return rows
 
     def _extract_time_for_label(self, row, label):
@@ -481,7 +490,5 @@ class VirginAmerica(AirlineBase):
 
 if __name__ == '__main__':
     from datetime import date
-    #  b6 = JetBlue(config)
-    #  print(b6.request_single('SFO', 'LGB', date(2015, 10, 23), early=False))
-    wn = Southwest(config)
-    print(wn.request_single('OAK', 'ONT', date(2015, 12, 19), early=False))
+    ua = United(config)
+    print(len(ua.request_single('SFO', 'SNA', date(2016, 8, 19), early=False)))
