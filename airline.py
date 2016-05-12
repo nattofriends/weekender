@@ -219,6 +219,10 @@ class Southwest(AirlineBase):
     def _request_single(self, origin, destination, date, early, data):
         r = self.s.post(self.endpoint, data=data)
         doc = self.resp_to_html(r)
+
+        if doc.cssselect('#errors'):
+            return []
+
         rows = doc.cssselect(".searchResultsTable > tbody > tr")
 
         return rows
@@ -385,7 +389,7 @@ class United(AirlineBase):
         r = self.s.post(self.endpoint, data=data, cookies={'AspxAutoDetectCookieSupport': '1'})
 
         doc = self.resp_to_html(r)
-        rows = doc.cssselect("ul[data-role='listview']")[:-1]
+        rows = doc.cssselect("ul[data-role='listview'][data-theme='d']")[:-1]
 
         # More pages?
         next_page = doc.cssselect("a[href*='DisplayNextFlights']")
@@ -393,7 +397,7 @@ class United(AirlineBase):
             next_page, = next_page
             r = self.s.get('https://mobile.united.com' + next_page.attrib['href'])
             doc = self.resp_to_html(r)
-            rows +=  doc.cssselect("ul[data-role='listview']")[:-1]
+            rows +=  doc.cssselect("ul[data-role='listview'][data-theme='d']")[:-1]
             next_page = doc.cssselect("a[href*='/Booking/DisplayNextFlights']")
 
         return rows
@@ -405,7 +409,11 @@ class United(AirlineBase):
         return self._parse_time_string(time_string)
 
     def extract_row_to_flightinfo(self, row, origin, destination, date, is_early):
-        _, flight_number = row.xpath(".//img[@alt='carrier logo']/..")[0].text_content().strip().split(' ')
+        # If we can't find it let's get out of here
+        try:
+            _, flight_number = row.xpath(".//img[@alt='carrier logo']/..")[0].text_content().strip().split(' ')
+        except IndexError:
+            return
 
         depart_time = self._extract_time_for_label(row, 'DepartureAirportName')
         arrive_time = self._extract_time_for_label(row, 'ArrivalAirportName')
