@@ -338,11 +338,15 @@ class JetBlue(AirlineBase):
 
         flight_number = self.elem_sel_to_text(row, '.flightCode').replace('Flight number ', '')
 
-        fare = int(
-            row.cssselect(".colPrice")[0].text_content().strip(' \r\n\t$')
-        )
+        # Sold out?
+        price_col = row.cssselect('.colPrice')
+        if not price_col:
+            return
 
-        # TODO: Need more checks here
+        # Lowest available price
+        price, *_ = price_col
+        fare = int(price.text_content().strip(' \r\n\t$'))
+
         fi = FlightInfo(
             origin,
             destination,
@@ -496,5 +500,7 @@ class VirginAmerica(AirlineBase):
 
 if __name__ == '__main__':
     from datetime import date
-    ua = United(config)
-    print(len(ua.request_single('SFO', 'SNA', date(2016, 8, 19), early=False)))
+    from pprint import pprint
+
+    wn = Southwest(config)
+    pprint(wn.request_single('OAK', 'LGB', date(2016, 8, 20), early=False))
