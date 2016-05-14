@@ -312,6 +312,10 @@ class JetBlue(AirlineBase):
             r.text.replace('\n', ''),
         )
 
+        # There might not be any flights at all if today is a origin_day.
+        if not m:
+            return []
+
         # ``Escaping'', they said!
         json_text = m.group(1).replace("\\'", "'")
 
